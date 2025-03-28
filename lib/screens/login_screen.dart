@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import 'package:projetoft/screens/home_screen.dart';
+import 'package:projetoft/screens/sign_up_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,46 +15,28 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  String? _errorMessage; // Variável para armazenar erro
 
   Future<void> _handleLogin() async {
-    setState(() => _isLoading = true);
-    
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null; // Resetar erro ao tentar novamente
+    });
+
     String? error = await _authService.signIn(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
 
-    setState(() => _isLoading = false);
+    setState(() {
+      _isLoading = false;
+      _errorMessage = error; // Definir mensagem de erro se houver
+    });
 
     if (error == null) {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-    }
-  }
-
-  Future<void> _handleSignUp() async {
-    setState(() => _isLoading = true);
-
-    String? error = await _authService.signUp(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
-    );
-
-    setState(() => _isLoading = false);
-
-    if (error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cadastro realizado com sucesso!")),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
       );
     }
   }
@@ -77,7 +59,19 @@ class _LoginScreenState extends State<LoginScreen> {
               decoration: const InputDecoration(labelText: "Senha"),
               obscureText: true,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
+
+            // Exibir mensagem de erro, se houver
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
             _isLoading
                 ? const CircularProgressIndicator()
                 : Column(
@@ -87,7 +81,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text("Login"),
                       ),
                       TextButton(
-                        onPressed: _handleSignUp,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                          );
+                        },
                         child: const Text("Criar conta"),
                       ),
                     ],
